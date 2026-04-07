@@ -11,19 +11,19 @@ def create_food_place(
     name: str = Form(),
     latitude: float = Form(),
     longitude: float = Form(),
+    description: str = Form(default=""),
     db: SessionDep = None,
     admin: AdminDep = None
 ):
     food_place = FoodPlace(
         name=name,
         latitude=latitude,
-        longitude=longitude
+        longitude=longitude,
+        description=description or None
     )
-
     db.add(food_place)
     db.commit()
-
-    return RedirectResponse("/admin/map", status_code=303)
+    return RedirectResponse("/admin", status_code=303)
 
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_home_view(

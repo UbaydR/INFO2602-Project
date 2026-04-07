@@ -1,17 +1,19 @@
 {% extends "authenticated-base.html" %}
 
-#includes external CSS and JS for Leaflet map, and custom JS for admin page
 {% block external_js %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="{{ url_for('static', path='js/app.js')}}"></script>
 {% endblock %}
 
+{% block sidebar %}
+
+<h5>Campus Eats Admin</h5>
+
+{% endblock %}
 
 {% block subpage_content %}
 
-<h2>Campus Eats - Admin</h2>
-
-<div id="map" style="height: 700px;"></div>
+<div id="map" style="height: 700px; border-radius: 10px;"></div>
 
 {% endblock %}
