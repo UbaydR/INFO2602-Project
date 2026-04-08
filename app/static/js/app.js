@@ -1,16 +1,18 @@
 //map functionality
-function initMap(){
+async function initMap() {
     const mapDiv = document.getElementById("map");
-    if (!mapDiv) return; 
+    if (!mapDiv) return;
 
     var map = L.map('map').setView([10.6417, -61.3995], 16);
 
-    
     L.tileLayer.wms("https://geoserver.sundaebytestt.com/geoserver/osm/wms", {
         layers: 'osm:osm_nohouse',
         format: 'image/png',
         transparent: true
     }).addTo(map);
+
+    // Load existing saved places as markers
+    await loadFoodPlaceMarkers(map);
 
     var marker;
 
@@ -18,22 +20,43 @@ function initMap(){
         var lat = e.latlng.lat;
         var lng = e.latlng.lng;
 
-        console.log("Clicked location:", lat, lng);
-
         if (marker) {
             map.removeLayer(marker);
         }
 
         marker = L.marker([lat, lng]).addTo(map);
-        marker.bindPopup("<b>Add new Food Place!</b><br>" +
-            "<a href='#' onclick='openForm(" + lat + ", " + lng + "); return false;'>Click here to add</a>").openPopup();
-  
+
+        window._map = map;
+        window._marker = marker;
+
+        marker.bindPopup(
+            "<b>New Food Place</b><br>" +
+            "<a href='#' onclick='openForm(" + lat + ", " + lng + "); return false;'>Click here to add</a>"
+        ).openPopup();
     });
 }
 
-//adding new food place form 
+async function loadFoodPlaceMarkers(map) {
+    try {
+        const response = await fetch('/api/food-places');
+        const places = await response.json();
+
+        for (const place of places) {
+            L.marker([place.latitude, place.longitude])
+                .addTo(map)
+                .bindPopup(`
+                    <b>${place.name}</b><br>
+                    ${place.description || 'No description'}
+                `);
+        }
+    } catch (err) {
+        console.error("Failed to load food places:", err);
+    }
+}
+
 function openForm(lat, lng) {
-    console.log("Opening form for:", lat, lng);
+    const map = window._map;
+    const marker = window._marker;
 
     const panel = document.getElementById("panel-content");
     if (!panel) return;
@@ -41,31 +64,26 @@ function openForm(lat, lng) {
     panel.innerHTML = `
         <h6>Add Food Place</h6>
 
-        <form method="POST" action="/admin/food-places">
+        <form id="food-place-form" enctype="multipart/form-data">
 
-            <!-- FOOD PLACE NAME -->
             <div class="mb-2">
                 <input type="text" name="name" placeholder="Food Place Name" required class="form-control">
             </div>
 
-            <!-- DESCRIPTION -->
             <div class="mb-2">
                 <textarea name="description" placeholder="Description" class="form-control"></textarea>
             </div>
 
-            <!-- FOOD PLACE IMAGE -->
             <div class="mb-2">
                 <label class="form-label small">Food Place Image</label>
                 <input type="file" name="place_image" accept="image/*" class="form-control">
             </div>
 
-            <!-- MENU IMAGE -->
             <div class="mb-2">
                 <label class="form-label small">Menu Image</label>
                 <input type="file" name="menu_image" accept="image/*" class="form-control">
             </div>
 
-            <!-- COORDINATES -->
             <input type="hidden" name="latitude" value="${lat}">
             <input type="hidden" name="longitude" value="${lng}">
 
@@ -74,15 +92,52 @@ function openForm(lat, lng) {
                 Lng: ${lng.toFixed(6)}
             </p>
 
-            <button type="submit" class="btn btn-success w-100">
-                Add Food Place
-            </button>
+            <button type="submit" class="btn btn-success w-100">Add Food Place</button>
+
         </form>
+
+        <div id="form-message" class="mt-2"></div>
     `;
+
+    document.getElementById("food-place-form").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const name = formData.get("name");
+
+        try {
+            const response = await fetch("/admin/food-places", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                const result = await response.json(); 
+    
+   
+                map.removeLayer(marker); 
+
+  
+                L.marker([lat, lng])
+                    .addTo(map)
+                    .bindPopup(`<b>${name}</b><br>${formData.get("description") || ""}`)
+                    .openPopup();
+
+                //eventually change to the flash message leave for now
+                panel.innerHTML = `<p class="text-success" fw-semibold>✓ ${name} added successfully!</p>`;
 }
 
-async function main(){
-    initMap();
+        } catch (err) {
+            console.error("Submit error:", err);
+            document.getElementById("form-message").innerHTML =
+                `<p class="text-danger small">Network error. Please try again.</p>`;
+        }
+    });
+}
+
+
+async function main() {
+    await initMap();
 }
 
 main();

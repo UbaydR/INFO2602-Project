@@ -1,29 +1,43 @@
-from fastapi import APIRouter, HTTPException, Depends, Request, Form
+from fastapi import APIRouter, HTTPException, Depends, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import status
+from sqlmodel import select
 from app.dependencies.session import SessionDep
 from app.dependencies.auth import AdminDep, IsUserLoggedIn, get_current_user, is_admin
 from . import router, templates
 from app.models.foodplace import FoodPlace
+from app.schemas.foodplace import FoodPlaceCreate
+from app.repositories.foodplace import FoodPlaceRepository
+from app.services.foodplace_service import FoodPlaceService
+
+@router.get("/api/food-places")
+def get_food_places(db: SessionDep, user: AdminDep):
+    places = db.exec(select(FoodPlace)).all()
+    return places
 
 @router.post("/admin/food-places")
-def create_food_place(
-    name: str = Form(),
-    latitude: float = Form(),
-    longitude: float = Form(),
-    description: str = Form(default=""),
-    db: SessionDep = None,
-    admin: AdminDep = None
+async def create_food_place(db: SessionDep, admin: AdminDep,
+    name: str = Form(...),
+    description: str = Form(None),
+    latitude: float = Form(...),
+    longitude: float = Form(...),
+    place_image: UploadFile = File(None),
+    menu_image: UploadFile = File(None)
 ):
-    food_place = FoodPlace(
+    repo = FoodPlaceRepository(db)
+    service = FoodPlaceService(repo)
+
+    data = FoodPlaceCreate(
         name=name,
+        description=description,
         latitude=latitude,
-        longitude=longitude,
-        description=description or None
+        longitude=longitude
     )
-    db.add(food_place)
-    db.commit()
-    return RedirectResponse("/admin", status_code=303)
+
+    place = service.create_food_place(data, place_image, menu_image)
+
+    return {"id": place.id, "name": place.name} 
+
 
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_home_view(

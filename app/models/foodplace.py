@@ -8,3 +8,5 @@ class FoodPlace(SQLModel, table=True):
     description: Optional[str] = None
     latitude: float
     longitude: float
+    place_url: Optional[str] = None
+    menu_url: Optional[str] = None
