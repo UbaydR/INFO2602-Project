@@ -12,15 +12,22 @@ app = typer.Typer()
 @app.command()
 def initialize():
     with get_cli_session() as db:
-        drop_all() 
+        #drop_all() 
         create_db_and_tables() 
         
-        '''Create the admin user (bob)'''
-        bob = UserBase(username='bob', email='bob@mail.com', password=encrypt_password("bobpass"), role="admin")
-        bob_db = User.model_validate(bob)
+        existing_bob = db.exec(select(User).where(User.username == 'bob')).first()
 
-        db.add(bob_db)
-        db.commit()        
+        #Check if the admin user already exists
+        if not existing_bob:
+            bob = UserBase(username='bob', email='bob@mail.com', password=encrypt_password("bobpass"), role="admin")
+            bob_db = User.model_validate(bob)
+
+            db.add(bob_db)
+            db.commit()
+            print("Admin user 'bob' created")
+        else:
+            print("Admin user 'bob' already exists")
+
         print("Database Initialized")
 
 

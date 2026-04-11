@@ -14,4 +14,4 @@ WORKDIR /app
 
 ENTRYPOINT ["python"]
 
-CMD ["-m", "app.main"]
+CMD ["-c", "from app.cli import initialize; initialize(); import app.main"]
