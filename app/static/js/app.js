@@ -47,10 +47,51 @@ async function loadFoodPlaceMarkers(map) {
                 .bindPopup(`
                     <b>${place.name}</b><br>
                     ${place.description || 'No description'}
+                    <a href="#" onclick="viewPlace(${place.id}); return false;">View</a>
                 `);
         }
     } catch (err) {
         console.error("Failed to load food places:", err);
+    }
+}
+
+async function viewPlace(id) {
+    try {
+        const response = await fetch(`/api/food-places/${id}`);
+        const place = await response.json();
+
+        const panel = document.getElementById("panel-content");
+
+        panel.innerHTML = `
+            ${
+                place.place_url 
+                ? `<img src="${place.place_url}" class="img-fluid mb-2"/>` 
+                : ""
+            }
+            <h5>${place.name}</h5>
+            <p>${place.description || "No description"}</p>
+
+            ${
+                place.menu_url 
+                ? `<p><a href="${place.menu_url}" target="_blank">View Menu</a></p>` 
+                : ""
+            }
+
+            <p class="text">
+                Lat: ${place.latitude}<br>
+                Lng: ${place.longitude}
+            </p>
+
+            <div class="mt-3">
+                <button class="btn btn-warning w-100"
+                    onclick='openEditForm(${JSON.stringify(place)})'>
+                    Edit Food Place
+                </button>
+            </div>
+        `;
+
+    } catch (err) {
+        console.error("View error:", err);
     }
 }
 
@@ -120,7 +161,8 @@ function openForm(lat, lng) {
   
                 L.marker([lat, lng])
                     .addTo(map)
-                    .bindPopup(`<b>${name}</b><br>${formData.get("description") || ""}`)
+                    .bindPopup(`<b>${name}</b><br>
+                        <a href="#" onclick="viewPlace(${result.id}); return false;">View</a>`)
                     .openPopup();
 
                 //eventually change to the flash message leave for now

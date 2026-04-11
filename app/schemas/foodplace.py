@@ -3,7 +3,7 @@ from sqlmodel import SQLModel
 from pydantic import EmailStr
 from typing import Optional
 
-class FoodPlaceCreate(FoodPlace):
+class FoodPlaceCreate(SQLModel):
     name: str
     description: Optional[str]
     latitude: float

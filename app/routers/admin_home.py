@@ -10,10 +10,18 @@ from app.schemas.foodplace import FoodPlaceCreate
 from app.repositories.foodplace import FoodPlaceRepository
 from app.services.foodplace_service import FoodPlaceService
 
+UPLOAD_DIR = "app/static/uploads"
+
 @router.get("/api/food-places")
-def get_food_places(db: SessionDep, user: AdminDep):
-    places = db.exec(select(FoodPlace)).all()
-    return places
+def get_all_food_places(db: SessionDep):
+    return db.exec(select(FoodPlace)).all()
+
+@router.get("/api/food-places/{place_id}")
+def get_food_place(place_id: int, db: SessionDep):
+    place = db.get(FoodPlace, place_id)
+    if not place:
+        raise HTTPException(status_code=404, detail="Not found")
+    return place
 
 @router.post("/admin/food-places")
 async def create_food_place(db: SessionDep, admin: AdminDep,
@@ -37,6 +45,7 @@ async def create_food_place(db: SessionDep, admin: AdminDep,
     place = service.create_food_place(data, place_image, menu_image)
 
     return {"id": place.id, "name": place.name} 
+
 
 
 @router.get("/admin", response_class=HTMLResponse)

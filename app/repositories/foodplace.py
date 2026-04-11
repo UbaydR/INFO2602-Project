@@ -10,3 +10,4 @@ class FoodPlaceRepository:
         self.db.commit()
         self.db.refresh(food_place)
         return food_place
+    
