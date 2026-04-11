@@ -19,11 +19,12 @@ class FoodPlaceRepository:
         self.db.commit()
         self.db.refresh(place)
         return place
-    
+
     def delete(self, place_id: int):
         place = self.db.get(FoodPlace, place_id)
         if not place:
-            return None
+            raise Exception("Food place not found")
+
         self.db.delete(place)
         self.db.commit()
-        return place
+        return True
