@@ -46,7 +46,43 @@ async def create_food_place(db: SessionDep, admin: AdminDep,
 
     return {"id": place.id, "name": place.name} 
 
+@router.put("/admin/food-places/{place_id}")
+async def update_food_place(
+    place_id: int,
+    db: SessionDep,
+    admin: AdminDep,
+    name: str = Form(...),
+    description: str = Form(None),
+    latitude: float = Form(...),
+    longitude: float = Form(...),
+    place_image: UploadFile = File(None),
+    menu_image: UploadFile = File(None)
+):
+    repo = FoodPlaceRepository(db)
+    service = FoodPlaceService(repo)
 
+    updated = service.update_food_place(
+        place_id,
+        name,
+        description,
+        latitude,
+        longitude,
+        place_image,
+        menu_image
+    )
+
+    return updated
+
+@router.delete("/admin/food-places/{place_id}")
+async def delete_food_place(
+    place_id: int,
+    db: SessionDep,
+    admin: AdminDep
+):
+    repo = FoodPlaceRepository(db)
+    service = FoodPlaceService(repo)
+    service.delete_food_place(place_id)
+    return {"message": "Deleted foodplace successfully!"}
 
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_home_view(

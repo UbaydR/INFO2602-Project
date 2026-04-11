@@ -11,3 +11,19 @@ class FoodPlaceRepository:
         self.db.refresh(food_place)
         return food_place
     
+    def get_by_id(self, place_id):
+        return self.db.get(FoodPlace, place_id)
+
+    def update(self, place):
+        self.db.add(place)
+        self.db.commit()
+        self.db.refresh(place)
+        return place
+    
+    def delete(self, place_id: int):
+        place = self.db.get(FoodPlace, place_id)
+        if not place:
+            return None
+        self.db.delete(place)
+        self.db.commit()
+        return place

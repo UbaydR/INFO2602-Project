@@ -46,3 +46,37 @@ class FoodPlaceService:
 
         return self.repo.create(food_place)
 
+    def update_food_place(self, place_id, name, description, latitude, longitude, place_image, menu_image):
+
+        place = self.repo.get_by_id(place_id)
+
+        if not place:
+            raise Exception("Food place not found")
+
+        place.name = name
+        place.description = description
+        place.latitude = latitude
+        place.longitude = longitude
+
+        # replace images only if new ones are uploaded
+        if place_image and place_image.filename:
+            place_path = f"{UPLOAD_DIR}/places/{place_image.filename}"
+
+            with open(place_path, "wb") as buffer:
+                shutil.copyfileobj(place_image.file, buffer)
+
+            place.place_url = f"/static/uploads/places/{place_image.filename}"
+
+        if menu_image and menu_image.filename:
+            menu_path = f"{UPLOAD_DIR}/menu/{menu_image.filename}"
+
+            with open(menu_path, "wb") as buffer:
+                shutil.copyfileobj(menu_image.file, buffer)
+
+            place.menu_url = f"/static/uploads/menu/{menu_image.filename}"
+
+        return self.repo.update(place)
+    
+    def delete_food_place(self, place_id: int):
+        return self.repo.delete(place_id)
+      

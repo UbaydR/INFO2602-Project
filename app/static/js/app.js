@@ -5,10 +5,9 @@ async function initMap() {
 
     var map = L.map('map').setView([10.6417, -61.3995], 16);
 
-    L.tileLayer.wms("https://geoserver.sundaebytestt.com/geoserver/osm/wms", {
-        layers: 'osm:osm_nohouse',
-        format: 'image/png',
-        transparent: true
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
     }).addTo(map);
 
     // Load existing saved places as markers
@@ -46,12 +45,32 @@ async function loadFoodPlaceMarkers(map) {
                 .addTo(map)
                 .bindPopup(`
                     <b>${place.name}</b><br>
-                    ${place.description || 'No description'}
-                    <a href="#" onclick="viewPlace(${place.id}); return false;">View</a>
+                    <a href="/api/food-places/${place.id}" onclick="viewPlace(${place.id}); return false;">View</a> &nbsp;|&nbsp;
+                    <a href="/api/food-places/${place.id}" style="color:red;" onclick="deletePlace(${place.id}); return false;">Delete</a>
                 `);
         }
     } catch (err) {
         console.error("Failed to load food places:", err);
+    }
+}
+
+async function deletePlace(id) {
+    if (!confirm("Delete this food place?")) return;
+
+    try {
+        const response = await fetch(`/admin/food-places/${id}`, {
+            method: "DELETE"
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert("Failed to delete. Please try again.");
+        }
+
+    } catch (err) {
+        console.error("Delete error:", err);
+        alert("Network error. Please try again.");
     }
 }
 
@@ -162,7 +181,8 @@ function openForm(lat, lng) {
                 L.marker([lat, lng])
                     .addTo(map)
                     .bindPopup(`<b>${name}</b><br>
-                        <a href="#" onclick="viewPlace(${result.id}); return false;">View</a>`)
+                        <a href="/api/food-places/${result.id}" onclick="viewPlace(${result.id}); return false;">View</a><br> &nbsp;|&nbsp;
+                        <a href="/api/food-places/${result.id}" style="color:red;" onclick="deletePlace(${result.id}); return false;">Delete</a>`)
                     .openPopup();
 
                 //eventually change to the flash message leave for now
@@ -177,6 +197,71 @@ function openForm(lat, lng) {
     });
 }
 
+function openEditForm(place) {
+    const panel = document.getElementById("panel-content");
+
+    panel.innerHTML = `
+        <h6>Edit Food Place</h6>
+
+        <form id="edit-food-place-form" enctype="multipart/form-data">
+
+            <div class="mb-2">
+                <input type="text" name="name" value="${place.name}" required class="form-control">
+            </div>
+
+            <div class="mb-2">
+                <textarea name="description" class="form-control">${place.description || ""}</textarea>
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label small">Replace Food Place Image</label>
+                <input type="file" name="place_image" class="form-control">
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label small">Replace Menu Image</label>
+                <input type="file" name="menu_image" class="form-control">
+            </div>
+
+            <input type="hidden" name="latitude" value="${place.latitude}">
+            <input type="hidden" name="longitude" value="${place.longitude}">
+
+            <button type="submit" class="btn btn-primary w-100">
+                Update Food Place
+            </button>
+
+        </form>
+
+        <div id="form-message" class="mt-2"></div>
+    `;
+
+    document.getElementById("edit-food-place-form")
+        .addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch(`/admin/food-places/${place.id}`, {
+                    method: "PUT",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const updated = await response.json();
+
+                    document.getElementById("panel-content").innerHTML =
+                        `<p class="text-success">✓ Updated ${updated.name} successfully!</p>`;
+
+                    // reload markers so changes reflect
+                    location.reload();  
+                }
+
+            } catch (err) {
+                console.error("Update error:", err);
+            }
+        });
+}
 
 async function main() {
     await initMap();
