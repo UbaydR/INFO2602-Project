@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
+import cloudinary
 
 @lru_cache
 def get_settings():
@@ -24,3 +25,16 @@ class Settings(BaseSettings):
     cloudinary_api_secret: str
 
     model_config = SettingsConfigDict(env_file=".env")
+
+
+settings = get_settings()
+
+def configure_cloudinary():
+    settings = get_settings()
+    cloudinary.config(
+        cloud_name=settings.cloudinary_cloud_name,
+        api_key=settings.cloudinary_api_key,
+        api_secret=settings.cloudinary_api_secret,
+    )
+
+configure_cloudinary()

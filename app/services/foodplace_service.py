@@ -1,6 +1,5 @@
 import os
 import shutil
-import app.config.cloudinary
 import cloudinary.uploader
 import cloudinary.api
 from app.schemas.foodplace import FoodPlaceCreate
