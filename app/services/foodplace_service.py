@@ -2,6 +2,7 @@ import os
 import shutil
 import cloudinary.uploader
 import cloudinary.api
+from app.models.foodplace import FoodPlace
 from app.schemas.foodplace import FoodPlaceCreate
 from app.repositories.foodplace import FoodPlaceRepository
 
