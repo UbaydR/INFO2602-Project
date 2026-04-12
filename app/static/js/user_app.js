@@ -110,7 +110,7 @@ async function viewPlace(id) {
             ` : ''}
 
             ${place.menu_url
-                ? `<p><a href="${place.menu_url}" target="_blank" style="color: #7ec8e3;">View Menu</a></p>`
+                ? `<p><a href="${place.menu_url}" target="_blank">View Menu</a></p>`
                 : ""}
 
             <p style="color: #aaa; font-size: 0.85em;">
@@ -155,7 +155,7 @@ async function viewPlace(id) {
             </div>
 
             <div style="margin-top: 12px;">
-                <button class="btn btn-outline-light btn-sm w-100" onclick="resetPanel()">← Back</button>
+                <button class="btn btn-outline-light btn-sm w-100" style="background-color: var(--platinum); color: grey; border: none; padding: 0.5rem 1rem; border-radius: 4px;" onclick="resetPanel()">← Back</button>
             </div>
         `;
 

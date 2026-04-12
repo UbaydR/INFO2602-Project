@@ -179,7 +179,8 @@ async function viewPlace(id) {
             </div>
 
             <div style="margin-top: 12px;">
-                <button class="btn btn-outline-light btn-sm w-100" onclick="resetAdminPanel()">← Back</button>
+                <button class="btn btn-outline-light btn-sm w-100" style="background-color: var(--platinum); color: grey; border: none; padding: 0.5rem 1rem; border-radius: 4px;" onclick="resetAdminPanel()">← Back</button>
+            </div>
             </div>
         `;
     } catch (err) {
@@ -190,7 +191,7 @@ async function viewPlace(id) {
 //reset admin sidebar to default
 function resetAdminPanel() {
     const panel = document.getElementById("panel-content");
-    panel.innerHTML = `<h7 class="text">Click on the map to add a food place.</h7>`;
+    panel.innerHTML = `<p class="text">Click on the map to add a food place.</p>`;
 }
 
 //open form to add new food place at given lat/lng
