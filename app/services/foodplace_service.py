@@ -1,8 +1,8 @@
 import os
 import shutil
+import app.config.cloudinary
 import cloudinary.uploader
 import cloudinary.api
-from app.models.foodplace import FoodPlace
 from app.schemas.foodplace import FoodPlaceCreate
 from app.repositories.foodplace import FoodPlaceRepository
 
@@ -134,12 +134,14 @@ class FoodPlaceService:
 
         #delete images from Cloudinary
         if place.place_url:
-            public_id = place.place_url.split("/")[-1].split(".")[0]
-            cloudinary.uploader.destroy(f"campus_eats/places/{public_id}")
+            url_parts = place.place_url.split("/upload/")[1]
+            public_id = "/".join(url_parts.split("/")[1:]).rsplit(".", 1)[0]
+            cloudinary.uploader.destroy(public_id)
 
         if place.menu_url:
-            public_id = place.menu_url.split("/")[-1].split(".")[0]
-            cloudinary.uploader.destroy(f"campus_eats/menus/{public_id}")
+            url_parts = place.menu_url.split("/upload/")[1]
+            public_id = "/".join(url_parts.split("/")[1:]).rsplit(".", 1)[0]
+            cloudinary.uploader.destroy(public_id)
 
         return self.repo.delete(place_id)
       

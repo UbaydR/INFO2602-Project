@@ -80,7 +80,7 @@ async function deletePlace(id) {
             // Clear side panel
             const panel = document.getElementById("panel-content");
             if (panel) {
-                panel.innerHTML = `<p class="text-success">✓ ${place.name} deleted!</p>`;
+                panel.innerHTML = `<p class="text-success"> Food place delete</p>`;
             }
 
         } else {
@@ -178,7 +178,7 @@ function openForm(lat, lng) {
 
                 markers[result.id] = newMarker;
 
-                panel.innerHTML = `<p class="text-success">✓ Added ${place.name} successfully</p>`;
+                panel.innerHTML = `<p class="text-success"> Added ${formData.get("name")} successfully</p>`;
             }
 
         } catch (err) {
