@@ -28,6 +28,7 @@ dependencies = [
     "tabulate",
     "typer",
     "uvicorn[standard]",
+    "cloudinary",
 ]
 [project.optional-dependencies]
 dev = [
