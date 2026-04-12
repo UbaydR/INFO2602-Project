@@ -17,10 +17,37 @@ class FoodPlaceService:
         place_url = None
         menu_url = None
 
+        # Upload place image to Cloudinary
+        if place_image and place_image.filename:
+            result = cloudinary.uploader.upload(
+                place_image.file,
+                folder="campus_eats/places"
+            )
+            place_url = result["secure_url"]
+
+        if menu_image and menu_image.filename:
+            result = cloudinary.uploader.upload(
+                menu_image.file,
+                folder="campus_eats/menus"
+            )
+            menu_url = result["secure_url"]
+
+        food_place = FoodPlace(
+            name=data.name,
+            description=data.description,
+            latitude=data.latitude,
+            longitude=data.longitude,
+            place_url=place_url,
+            menu_url=menu_url
+        )
+
+        return self.repo.create(food_place)
+
+        '''
         # Ensure folders exist
         os.makedirs(f"{UPLOAD_DIR}/places", exist_ok=True)
         os.makedirs(f"{UPLOAD_DIR}/menu", exist_ok=True)
-
+    
         if place_image:
             place_path = f"{UPLOAD_DIR}/places/{place_image.filename}"
 
@@ -47,6 +74,7 @@ class FoodPlaceService:
         )
 
         return self.repo.create(food_place)
+        '''
 
     def update_food_place(self, place_id, name, description, latitude, longitude, place_image, menu_image):
 
@@ -55,11 +83,29 @@ class FoodPlaceService:
         if not place:
             raise Exception("Food place not found")
 
+        # Update basic fields
         place.name = name
         place.description = description
         place.latitude = latitude
         place.longitude = longitude
 
+        if place_image and place_image.filename:
+            result = cloudinary.uploader.upload(
+                place_image.file,
+                folder="campus_eats/places"
+            )
+            place.place_url = result["secure_url"]
+
+        if menu_image and menu_image.filename:
+            result = cloudinary.uploader.upload(
+                menu_image.file,
+                folder="campus_eats/menus"
+            )
+            place.menu_url = result["secure_url"]
+
+        return self.repo.update(place)
+
+        '''
         # replace images only if new ones are uploaded
         if place_image and place_image.filename:
             place_path = f"{UPLOAD_DIR}/places/{place_image.filename}"
@@ -76,9 +122,24 @@ class FoodPlaceService:
                 shutil.copyfileobj(menu_image.file, buffer)
 
             place.menu_url = f"/static/uploads/menu/{menu_image.filename}"
-
-        return self.repo.update(place)
+        '''
+        
     
     def delete_food_place(self, place_id: int):
+        #return self.repo.delete(place_id)
+        place = self.repo.get_by_id(place_id)
+
+        if not place:
+            return None
+
+        #delete images from Cloudinary
+        if place.place_url:
+            public_id = place.place_url.split("/")[-1].split(".")[0]
+            cloudinary.uploader.destroy(f"campus_eats/places/{public_id}")
+
+        if place.menu_url:
+            public_id = place.menu_url.split("/")[-1].split(".")[0]
+            cloudinary.uploader.destroy(f"campus_eats/menus/{public_id}")
+
         return self.repo.delete(place_id)
       

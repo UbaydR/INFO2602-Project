@@ -5,13 +5,14 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.routers import templates, static_files, router, api_router
 from app.config import get_settings
 from contextlib import asynccontextmanager
-
+from app.config import cloudinary 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app.database import create_db_and_tables
     create_db_and_tables()
     yield
+
 
 
 app = FastAPI(middleware=[
