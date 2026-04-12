@@ -19,7 +19,7 @@ async function initMap() {
 
     let tempMarker;
 
-    map.on('click', function(e) {
+    map.on('click', function (e) {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
 
@@ -93,21 +93,70 @@ async function deletePlace(id) {
     }
 }
 
-//view food place details in side panel
+//star rating display
+function renderStars(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+            stars += '<span class="material-symbols-outlined" style="color: #ffc107; font-size: 18px;">star</span>';
+        } else {
+            stars += '<span class="material-symbols-outlined" style="color: #ccc; font-size: 18px;">star</span>';
+        }
+    }
+    return stars;
+}
+
+//function for avg rating
+function computeAverage(reviews) {
+    if (!reviews || reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    return (sum / reviews.length).toFixed(1);
+}
+
+//view food place details
 async function viewPlace(id) {
     try {
-        const response = await fetch(`/api/food-places/${id}`);
-        const place = await response.json();
+        const [placeRes, reviewsRes] = await Promise.all([
+            fetch(`/api/food-places/${id}`),
+            fetch(`/api/food-places/${id}/reviews`)
+        ]);
+
+        const place = await placeRes.json();
+        const reviews = await reviewsRes.json();
 
         const panel = document.getElementById("panel-content");
+        const avg = computeAverage(reviews);
+
+        let reviewsHTML = '';
+        if (reviews.length > 0) {
+            reviewsHTML = reviews.map(r => `
+                <div style="border-bottom: 1px solid #415a77; padding: 8px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong>${r.username}</strong>
+                        <small style="color: #aaa;">${new Date(r.created_at).toLocaleDateString()}</small>
+                    </div>
+                    <div>${renderStars(r.rating)}</div>
+                    ${r.comment ? `<p style="margin: 4px 0 0 0; color: #ccc;">${r.comment}</p>` : ''}
+                </div>
+            `).join('');
+        } else {
+            reviewsHTML = '<p style="color: #aaa;">No reviews yet.</p>';
+        }
 
         panel.innerHTML = `
             ${place.place_url ? `<img src="${place.place_url}" class="img-fluid mb-2"/>` : ""}
             <h5>${place.name}</h5>
             <p>${place.description || "No description"}</p>
 
-            ${place.menu_url 
-                ? `<p><a href="${place.menu_url}" target="_blank">View Menu</a></p>` 
+            ${avg > 0 ? `
+                <div style="margin-bottom: 8px;">
+                    ${renderStars(Math.round(avg))}
+                    <span style="color: #aaa; margin-left: 4px;">${avg} / 5 (${reviews.length} review${reviews.length !== 1 ? 's' : ''})</span>
+                </div>
+            ` : ''}
+
+            ${place.menu_url
+                ? `<p><a href="${place.menu_url}" target="_blank">View Menu</a></p>`
                 : ""}
 
             <p>
@@ -121,10 +170,27 @@ async function viewPlace(id) {
                     Edit Food Place
                 </button>
             </div>
+
+            <hr style="border-color: #415a77;">
+
+            <h6>Reviews</h6>
+            <div id="reviews-list">
+                ${reviewsHTML}
+            </div>
+
+            <div style="margin-top: 12px;">
+                <button class="btn btn-outline-light btn-sm w-100" onclick="resetAdminPanel()">← Back</button>
+            </div>
         `;
     } catch (err) {
         console.error("View error:", err);
     }
+}
+
+//reset admin sidebar to default
+function resetAdminPanel() {
+    const panel = document.getElementById("panel-content");
+    panel.innerHTML = `<h7 class="text">Click on the map to add a food place.</h7>`;
 }
 
 //open form to add new food place at given lat/lng
@@ -151,7 +217,7 @@ function openForm(lat, lng) {
         </form>
     `;
 
-    document.getElementById("food-place-form").addEventListener("submit", async function(e) {
+    document.getElementById("food-place-form").addEventListener("submit", async function (e) {
         e.preventDefault();
 
         const formData = new FormData(this);
@@ -207,10 +273,11 @@ function openEditForm(place) {
             <input type="hidden" name="longitude" value="${place.longitude}">
 
             <button type="submit" class="btn btn-primary w-100">Update</button>
+            <button type="button" class="btn btn-outline-light w-100 mt-2" onclick="viewPlace(${place.id})">Cancel</button>
         </form>
     `;
 
-    document.getElementById("edit-form").addEventListener("submit", async function(e) {
+    document.getElementById("edit-form").addEventListener("submit", async function (e) {
         e.preventDefault();
 
         const formData = new FormData(this);

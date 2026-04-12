@@ -28,6 +28,19 @@ def initialize():
         else:
             print("Admin user 'bob' already exists")
 
+        # Check if the regular user already exists
+        existing_joe = db.exec(select(User).where(User.username == 'joe')).first()
+
+        if not existing_joe:
+            joe = UserBase(username='joe', email='joe@mail.com', password=encrypt_password("joepass"), role="regular_user")
+            joe_db = User.model_validate(joe)
+
+            db.add(joe_db)
+            db.commit()
+            print("Regular user 'joe' created")
+        else:
+            print("Regular user 'joe' already exists")
+
         print("Database Initialized")
 
 
