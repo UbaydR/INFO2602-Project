@@ -165,8 +165,7 @@ async function viewPlace(id) {
             </p>
 
             <div class="mt-3">
-                <button class="btn btn-warning w-100"
-                    onclick='openEditForm(${JSON.stringify(place)})'>
+                <button class="btn btn-warning w-100" id="edit-place-btn">
                     Edit Food Place
                 </button>
             </div>
@@ -183,6 +182,13 @@ async function viewPlace(id) {
             </div>
             </div>
         `;
+
+        const editBtn = document.getElementById("edit-place-btn");
+        if (editBtn) {
+            editBtn.addEventListener("click", () => {
+                openEditForm(place);
+            });
+        }
     } catch (err) {
         console.error("View error:", err);
     }
